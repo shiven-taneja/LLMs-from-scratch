@@ -4,6 +4,7 @@ from datasets.GPTDatasetV1 import create_dataloader_v1
 import tiktoken
 import pandas as pd
 import re
+import torch
 
 def create_vocab(text):
     
@@ -24,9 +25,21 @@ if __name__ == "__main__":
     with open("Working_with_text_data/the-verdict.txt", 'r', encoding='utf-8') as f: 
         raw_text = f.read()
 
-    dataloader = create_dataloader_v1(raw_text, batch_size=8, max_length=4, stride=4, shuffle=False)
+    max_length=4
+    dataloader = create_dataloader_v1(raw_text, batch_size=8, max_length=max_length, stride=4, shuffle=False)
+    
+    vocab_size = 50257
+    output_dim = 256
+    token_embedding_layer = torch.nn.Embedding(vocab_size, output_dim)
 
     data_iter = iter(dataloader)
     inputs, targets = next(data_iter)
-    print("Inputs:\n", inputs)
-    print("\nTargets:\n", targets)
+
+    token_embeddings = token_embedding_layer(inputs)
+
+    context_length = max_length
+    pos_emedding_layer = torch.nn.Embedding(context_length, output_dim)
+    pos_embeddings = pos_emedding_layer(torch.arange(context_length))
+
+    input_embeddings = token_embeddings + pos_embeddings
+    print(input_embeddings.shape)
